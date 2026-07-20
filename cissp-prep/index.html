@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CISSP Prep — Practice Exams</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #263449;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-dark: #0284c7;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; min-height: 100vh; }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { text-align: center; padding: 28px 0 8px; }
+  header h1 { font-size: 1.9rem; letter-spacing: 0.5px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); margin-top: 6px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-top: 20px; }
+  .level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+  @media (max-width: 640px) { .level-grid { grid-template-columns: 1fr; } }
+  .level-card { cursor: pointer; transition: all .15s ease; text-align: left; }
+  .level-card:hover { background: var(--card-hover); border-color: var(--accent); transform: translateY(-2px); }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: .4px; text-transform: uppercase; }
+  .badge.entry { background: rgba(52,211,153,.15); color: var(--green); }
+  .badge.inter { background: rgba(251,191,36,.15); color: var(--amber); }
+  .level-card h2 { margin: 12px 0 6px; font-size: 1.25rem; }
+  .level-card p { color: var(--muted); font-size: .92rem; line-height: 1.5; }
+  .btn { display: inline-block; background: var(--accent-dark); color: #fff; border: none; border-radius: 8px; padding: 11px 22px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn:hover { background: var(--accent); color: #06283d; }
+  .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn.secondary:hover { border-color: var(--accent); background: var(--card-hover); color: var(--text); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .hidden { display: none !important; }
+  /* Exam */
+  .exam-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .exam-top .meta { color: var(--muted); font-size: .9rem; }
+  .progress-track { background: var(--border); height: 8px; border-radius: 99px; margin: 14px 0 4px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, var(--accent-dark), var(--accent)); height: 100%; width: 0; border-radius: 99px; transition: width .25s; }
+  .domain-tag { color: var(--accent); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+  .question-text { font-size: 1.12rem; line-height: 1.55; margin-bottom: 18px; }
+  .choice { display: flex; gap: 12px; align-items: flex-start; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; margin-bottom: 10px; cursor: pointer; transition: all .12s; font-size: .98rem; line-height: 1.45; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.selected { border-color: var(--accent); background: rgba(56,189,248,.1); }
+  .choice .letter { font-weight: 700; color: var(--accent); min-width: 20px; }
+  .nav-row { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
+  .qnav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+  .qnav button { width: 34px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); font-size: .78rem; cursor: pointer; }
+  .qnav button.answered { background: rgba(56,189,248,.18); color: var(--accent); border-color: var(--accent-dark); }
+  .qnav button.current { outline: 2px solid var(--accent); color: var(--text); }
+  /* Results */
+  .score-hero { text-align: center; padding: 10px 0 4px; }
+  .score-hero .pct { font-size: 3.4rem; font-weight: 800; }
+  .score-hero .pass { color: var(--green); }
+  .score-hero .fail { color: var(--red); }
+  .score-hero .tally { color: var(--muted); margin-top: 4px; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+  @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+  .chart-box { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .chart-box h3 { font-size: .95rem; color: var(--muted); text-align: center; margin-bottom: 10px; font-weight: 600; }
+  .focus-item { border-left: 4px solid var(--red); background: var(--bg); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .focus-item.ok { border-left-color: var(--green); }
+  .focus-item.warn { border-left-color: var(--amber); }
+  .focus-item b { display: block; margin-bottom: 3px; }
+  .focus-item small { color: var(--muted); line-height: 1.5; display: block; }
+  .review-q { border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; background: var(--bg); }
+  .review-q .rq-domain { font-size: .75rem; color: var(--accent); text-transform: uppercase; letter-spacing: .5px; }
+  .review-q p.q { margin: 6px 0 8px; font-weight: 600; line-height: 1.45; }
+  .review-q .ans { font-size: .9rem; line-height: 1.5; }
+  .review-q .ans .wrong { color: var(--red); }
+  .review-q .ans .right { color: var(--green); }
+  .review-q .expl { margin-top: 8px; color: var(--muted); font-size: .88rem; line-height: 1.5; border-top: 1px dashed var(--border); padding-top: 8px; }
+  h2.section { margin-top: 30px; font-size: 1.2rem; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 48px; }
+  /* Flashcards */
+  .fc-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .fc-controls select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: .92rem; }
+  .fc-scene { perspective: 1400px; margin-top: 18px; }
+  .fc-card { position: relative; width: 100%; min-height: 300px; cursor: pointer; transform-style: preserve-3d; transition: transform .5s; }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 14px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; }
+  .fc-front { background: var(--card); }
+  .fc-front .term { font-size: 1.5rem; font-weight: 700; line-height: 1.4; }
+  .fc-back { background: #16283e; transform: rotateY(180deg); }
+  .fc-back .def { font-size: 1.02rem; line-height: 1.65; color: var(--text); }
+  .fc-face .fc-domain { position: absolute; top: 14px; left: 0; right: 0; font-size: .75rem; color: var(--accent); text-transform: uppercase; letter-spacing: .6px; }
+  .fc-face .fc-hint { position: absolute; bottom: 12px; left: 0; right: 0; font-size: .78rem; color: var(--muted); }
+  .fc-nav { display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .fc-counter { text-align: center; color: var(--muted); font-size: .9rem; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🛡️ CISSP <span>Prep</span></h1>
+    <p>Practice exams across all 8 CISSP domains</p>
+  </header>
+
+  <!-- HOME -->
+  <div id="home">
+    <div class="level-grid">
+      <div class="card level-card" onclick="startExam('entry')">
+        <span class="badge entry">Level 1 · Entry</span>
+        <h2>Foundations Exam</h2>
+        <p>50 multiple-choice questions covering core terminology and concepts from all 8 domains. Build your base before moving up.</p>
+        <br><button class="btn">Start Level 1 →</button>
+      </div>
+      <div class="card level-card" onclick="startExam('intermediate')">
+        <span class="badge inter">Level 2 · Intermediate</span>
+        <h2>Practitioner Exam</h2>
+        <p>100 scenario-based questions with calculations, models, and applied judgment — closer to real CISSP difficulty.</p>
+        <br><button class="btn">Start Level 2 →</button>
+      </div>
+    </div>
+    <div class="card level-card" onclick="startFlash()">
+      <span class="badge" style="background:rgba(167,139,250,.15); color:#a78bfa;">Study Guide</span>
+      <h2>Flashcards — 200 cards</h2>
+      <p>Brush up on key terms, models, formulas, and concepts across all 8 domains. Flip cards, filter by domain, and shuffle. 25 cards per domain.</p>
+      <br><button class="btn">Open Study Guide →</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:1.05rem;">How it works</h2>
+      <p style="color:var(--muted); font-size:.92rem; margin-top:8px; line-height:1.6;">
+        Answer every question, then submit to see your score, a percentage, pie charts of right vs. wrong answers by domain,
+        and a personalized summary of which CISSP domains you should focus on. Answers are revealed only at the end — just like the real exam.
+      </p>
+    </div>
+  </div>
+
+  <!-- EXAM -->
+  <div id="exam" class="hidden">
+    <div class="card">
+      <div class="exam-top">
+        <span id="exam-title" style="font-weight:700;"></span>
+        <span class="meta"><span id="q-counter"></span> · <span id="answered-counter"></span> answered</span>
+      </div>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+    </div>
+    <div class="card">
+      <div class="domain-tag" id="q-domain"></div>
+      <div class="question-text" id="q-text"></div>
+      <div id="q-choices"></div>
+      <div class="nav-row">
+        <button class="btn secondary" id="btn-prev" onclick="prevQ()">← Previous</button>
+        <div>
+          <button class="btn secondary" onclick="quitExam()">Quit</button>
+          <button class="btn" id="btn-next" onclick="nextQ()">Next →</button>
+          <button class="btn hidden" id="btn-submit" onclick="submitExam()">Submit Exam ✓</button>
+        </div>
+      </div>
+      <div class="qnav" id="qnav"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hidden">
+    <div class="card score-hero">
+      <div id="score-pct" class="pct"></div>
+      <div id="score-label" style="font-weight:700; font-size:1.1rem;"></div>
+      <div id="score-tally" class="tally"></div>
+    </div>
+    <div class="charts">
+      <div class="chart-box"><h3>Overall — Correct vs. Incorrect</h3><canvas id="chart-overall"></canvas></div>
+      <div class="chart-box"><h3>Incorrect Answers by Domain</h3><canvas id="chart-wrong"></canvas></div>
+    </div>
+    <div class="card chart-box" style="margin-top:18px;"><h3>Score by Domain (%)</h3><canvas id="chart-domains"></canvas></div>
+    <h2 class="section">📌 What you should focus on</h2>
+    <div class="card" id="focus-summary"></div>
+    <h2 class="section">📝 Review missed questions</h2>
+    <div id="review"></div>
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn" onclick="retake()">Retake this exam</button>
+      <button class="btn secondary" onclick="goHome()">Back to home</button>
+    </div>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div id="flash" class="hidden">
+    <div class="card">
+      <div class="fc-controls">
+        <span style="font-weight:700;">📚 Study Guide — Flashcards</span>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <select id="fc-filter" onchange="filterFlash()"></select>
+          <button class="btn secondary" onclick="shuffleFlash()">🔀 Shuffle</button>
+          <button class="btn secondary" onclick="goHome()">Home</button>
+        </div>
+      </div>
+      <div class="fc-scene">
+        <div class="fc-card" id="fc-card" onclick="flipCard()">
+          <div class="fc-face fc-front">
+            <div class="fc-domain" id="fc-domain-f"></div>
+            <div class="term" id="fc-term"></div>
+            <div class="fc-hint">Click card or press Space to flip</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="fc-domain" id="fc-domain-b"></div>
+            <div class="def" id="fc-def"></div>
+            <div class="fc-hint">Click to flip back · ← → to navigate</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-nav">
+        <button class="btn secondary" id="fc-prev" onclick="prevCard()">← Previous</button>
+        <button class="btn" onclick="flipCard()">Flip</button>
+        <button class="btn secondary" id="fc-next" onclick="nextCard()">Next →</button>
+      </div>
+      <div class="fc-counter" id="fc-counter"></div>
+    </div>
+  </div>
+
+  <footer>CISSP® is a registered trademark of ISC2. This is an independent study tool, not affiliated with ISC2.</footer>
+</div>
+
+<script src="questions.js"></script>
+<script src="flashcards.js"></script>
+<script>
+const PASS_MARK = 70;
+const DOMAIN_ADVICE = {
+  1: "Review risk management formulas (SLE, ARO, ALE), risk responses, governance roles, legal/regulatory concepts (GDPR, IP law), the (ISC)² Code of Ethics, and security control categories.",
+  2: "Study data classification roles (owner vs. custodian), the data lifecycle, NIST 800-88 sanitization (clear/purge/destroy), data states, retention, and privacy techniques like pseudonymization.",
+  3: "Drill security models (Bell-LaPadula, Biba, Clark-Wilson), cryptography fundamentals (symmetric vs. asymmetric, hashing, PKI, digital signatures), secure design principles, and physical/site security.",
+  4: "Revisit the OSI model, common ports and protocols, IPsec (AH vs. ESP), TLS, network attacks (SYN flood, ARP poisoning, VLAN hopping) and defenses, plus zero trust and segmentation.",
+  5: "Focus on the IAAA model, access control types (RBAC, ABAC, MAC, DAC), federation protocols (SAML, OAuth, OIDC), Kerberos, biometrics metrics (FAR/FRR/CER), and the identity lifecycle.",
+  6: "Study assessment types (vulnerability scan vs. pen test), test methodologies (black/white/gray box), SOC reports, audit independence, and testing techniques like fuzzing and misuse cases.",
+  7: "Review incident response phases, forensics and order of volatility, backup strategies (full/incremental/differential, 3-2-1), RAID, DR sites and test types, and recovery metrics (RTO/RPO/MTD).",
+  8: "Practice OWASP vulnerabilities (SQLi, XSS, CSRF, IDOR), secure SDLC, SAST/DAST/SCA, memory safety, database security concepts, and CI/CD pipeline protection."
+};
+
+let currentLevel = null, questions = [], answers = [], idx = 0;
+let charts = [];
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function startExam(level){
+  currentLevel = level;
+  questions = shuffle(level==='entry' ? ENTRY_QUESTIONS : INTERMEDIATE_QUESTIONS);
+  answers = new Array(questions.length).fill(null);
+  idx = 0;
+  document.getElementById('exam-title').textContent = level==='entry' ? 'Level 1 · Foundations (50 questions)' : 'Level 2 · Practitioner (100 questions)';
+  show('exam');
+  renderQ();
+}
+
+function show(id){
+  ['home','exam','results','flash'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function renderQ(){
+  const q = questions[idx];
+  document.getElementById('q-domain').textContent = 'Domain ' + q.d + ' — ' + DOMAINS[q.d];
+  document.getElementById('q-text').textContent = (idx+1) + '. ' + q.q;
+  const letters = ['A','B','C','D'];
+  const box = document.getElementById('q-choices');
+  box.innerHTML = '';
+  q.c.forEach((choice,i)=>{
+    const div = document.createElement('div');
+    div.className = 'choice' + (answers[idx]===i ? ' selected' : '');
+    div.onclick = ()=>{ answers[idx]=i; renderQ(); };
+    const l = document.createElement('span'); l.className='letter'; l.textContent = letters[i] + '.';
+    const t = document.createElement('span'); t.textContent = choice;
+    div.appendChild(l); div.appendChild(t);
+    box.appendChild(div);
+  });
+  document.getElementById('q-counter').textContent = 'Question ' + (idx+1) + ' of ' + questions.length;
+  const answered = answers.filter(a=>a!==null).length;
+  document.getElementById('answered-counter').textContent = answered + '/' + questions.length;
+  document.getElementById('progress-fill').style.width = (answered/questions.length*100) + '%';
+  document.getElementById('btn-prev').disabled = idx===0;
+  const last = idx===questions.length-1;
+  document.getElementById('btn-next').classList.toggle('hidden', last);
+  document.getElementById('btn-submit').classList.toggle('hidden', !last);
+  const nav = document.getElementById('qnav');
+  nav.innerHTML = '';
+  questions.forEach((_,i)=>{
+    const b = document.createElement('button');
+    b.textContent = i+1;
+    if(answers[i]!==null) b.classList.add('answered');
+    if(i===idx) b.classList.add('current');
+    b.onclick = ()=>{ idx=i; renderQ(); };
+    nav.appendChild(b);
+  });
+}
+
+function nextQ(){ if(idx<questions.length-1){ idx++; renderQ(); } }
+function prevQ(){ if(idx>0){ idx--; renderQ(); } }
+function quitExam(){ if(confirm('Quit this exam? Your progress will be lost.')) goHome(); }
+function goHome(){ destroyCharts(); show('home'); }
+function retake(){ destroyCharts(); startExam(currentLevel); }
+function destroyCharts(){ charts.forEach(c=>c.destroy()); charts=[]; }
+
+function submitExam(){
+  const unanswered = answers.filter(a=>a===null).length;
+  if(unanswered>0 && !confirm(unanswered + ' question(s) are unanswered and will be marked incorrect. Submit anyway?')) return;
+  // Score
+  let correct=0;
+  const perDomain = {};
+  Object.keys(DOMAINS).forEach(d=>perDomain[d]={right:0,wrong:0});
+  const missed=[];
+  questions.forEach((q,i)=>{
+    if(answers[i]===q.a){ correct++; perDomain[q.d].right++; }
+    else { perDomain[q.d].wrong++; missed.push({q,given:answers[i]}); }
+  });
+  const total = questions.length;
+  const pct = Math.round(correct/total*1000)/10;
+  const pass = pct >= PASS_MARK;
+  // Hero
+  const pctEl = document.getElementById('score-pct');
+  pctEl.textContent = pct + '%';
+  pctEl.className = 'pct ' + (pass?'pass':'fail');
+  document.getElementById('score-label').textContent = pass ? '✅ On track — keep sharpening!' : '📚 Below the 70% target — study plan below';
+  document.getElementById('score-tally').textContent = correct + ' correct · ' + (total-correct) + ' incorrect · ' + total + ' total';
+  show('results');
+  destroyCharts();
+  renderCharts(correct, total, perDomain);
+  renderFocus(perDomain);
+  renderReview(missed);
+}
+
+const DOMAIN_COLORS = ['#38bdf8','#34d399','#fbbf24','#f87171','#a78bfa','#fb923c','#22d3ee','#f472b6'];
+
+function renderCharts(correct, total, perDomain){
+  const textColor = '#e2e8f0';
+  // Overall pie
+  charts.push(new Chart(document.getElementById('chart-overall'), {
+    type: 'pie',
+    data: { labels:['Correct','Incorrect'], datasets:[{ data:[correct,total-correct], backgroundColor:['#34d399','#f87171'], borderColor:'#1e293b', borderWidth:2 }] },
+    options: { plugins:{ legend:{ labels:{ color:textColor } } } }
+  }));
+  // Wrong by domain pie
+  const wrongLabels=[], wrongData=[], wrongColors=[];
+  Object.keys(DOMAINS).forEach((d,i)=>{
+    if(perDomain[d].wrong>0){ wrongLabels.push('D'+d+' '+DOMAINS[d]); wrongData.push(perDomain[d].wrong); wrongColors.push(DOMAIN_COLORS[i]); }
+  });
+  if(wrongData.length===0){ wrongLabels.push('No incorrect answers 🎉'); wrongData.push(1); wrongColors.push('#34d399'); }
+  charts.push(new Chart(document.getElementById('chart-wrong'), {
+    type: 'pie',
+    data: { labels:wrongLabels, datasets:[{ data:wrongData, backgroundColor:wrongColors, borderColor:'#1e293b', borderWidth:2 }] },
+    options: { plugins:{ legend:{ labels:{ color:textColor, font:{size:10} } } } }
+  }));
+  // Per-domain % bar
+  const labels=[], data=[], colors=[];
+  Object.keys(DOMAINS).forEach((d,i)=>{
+    const t = perDomain[d].right + perDomain[d].wrong;
+    if(t>0){ labels.push('D'+d); data.push(Math.round(perDomain[d].right/t*100)); colors.push(data[data.length-1]>=PASS_MARK ? '#34d399' : data[data.length-1]>=50 ? '#fbbf24' : '#f87171'); }
+  });
+  charts.push(new Chart(document.getElementById('chart-domains'), {
+    type: 'bar',
+    data: { labels, datasets:[{ label:'% correct', data, backgroundColor:colors, borderRadius:6 }] },
+    options: {
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title:(items)=>{ const d=items[0].label.replace('D',''); return 'Domain '+d+' — '+DOMAINS[d]; } } } },
+      scales:{ y:{ min:0, max:100, ticks:{ color:textColor, callback:v=>v+'%' }, grid:{ color:'#334155' } }, x:{ ticks:{ color:textColor }, grid:{ display:false } } }
+    }
+  }));
+}
+
+function renderFocus(perDomain){
+  const box = document.getElementById('focus-summary');
+  box.innerHTML = '';
+  const rows = Object.keys(DOMAINS).map(d=>{
+    const t = perDomain[d].right + perDomain[d].wrong;
+    return { d, t, pct: t>0 ? Math.round(perDomain[d].right/t*100) : null, wrong: perDomain[d].wrong };
+  }).filter(r=>r.t>0).sort((a,b)=>a.pct-b.pct);
+
+  const weak = rows.filter(r=>r.pct<PASS_MARK);
+  const intro = document.createElement('p');
+  intro.style.cssText = 'color:var(--muted); font-size:.92rem; margin-bottom:14px; line-height:1.5;';
+  intro.textContent = weak.length===0
+    ? 'Excellent — you scored at or above 70% in every domain. Keep reinforcing with timed practice and move to harder material.'
+    : 'You scored below 70% in ' + weak.length + ' domain(s). Prioritize your study time in this order (weakest first):';
+  box.appendChild(intro);
+
+  rows.forEach(r=>{
+    const div = document.createElement('div');
+    div.className = 'focus-item ' + (r.pct>=PASS_MARK ? 'ok' : r.pct>=50 ? 'warn' : '');
+    const title = document.createElement('b');
+    title.textContent = 'Domain ' + r.d + ' — ' + DOMAINS[r.d] + ': ' + r.pct + '% (' + r.wrong + ' wrong)';
+    const tip = document.createElement('small');
+    tip.textContent = r.pct>=PASS_MARK ? 'Solid. Maintain with occasional review.' : DOMAIN_ADVICE[r.d];
+    div.appendChild(title); div.appendChild(tip);
+    box.appendChild(div);
+  });
+}
+
+// ---------- Flashcards ----------
+let fcDeck = [], fcIdx = 0, fcFlipped = false, fcDomain = 'all';
+
+function startFlash(){
+  const sel = document.getElementById('fc-filter');
+  if(sel.options.length === 0){
+    const optAll = document.createElement('option');
+    optAll.value = 'all'; optAll.textContent = 'All domains (200 cards)';
+    sel.appendChild(optAll);
+    Object.keys(DOMAINS).forEach(d=>{
+      const n = FLASHCARDS.filter(c=>c.d==d).length;
+      const o = document.createElement('option');
+      o.value = d; o.textContent = 'D' + d + ' — ' + DOMAINS[d] + ' (' + n + ')';
+      sel.appendChild(o);
+    });
+  }
+  sel.value = fcDomain;
+  buildDeck();
+  show('flash');
+}
+
+function buildDeck(){
+  const pool = fcDomain==='all' ? FLASHCARDS : FLASHCARDS.filter(c=>c.d==fcDomain);
+  fcDeck = shuffle(pool);
+  fcIdx = 0; fcFlipped = false;
+  renderCard();
+}
+
+function filterFlash(){
+  fcDomain = document.getElementById('fc-filter').value;
+  buildDeck();
+}
+
+function shuffleFlash(){ buildDeck(); }
+
+function renderCard(){
+  const c = fcDeck[fcIdx];
+  const card = document.getElementById('fc-card');
+  card.classList.remove('flipped');
+  fcFlipped = false;
+  document.getElementById('fc-domain-f').textContent = 'Domain ' + c.d + ' — ' + DOMAINS[c.d];
+  document.getElementById('fc-domain-b').textContent = 'Domain ' + c.d + ' — ' + DOMAINS[c.d];
+  document.getElementById('fc-term').textContent = c.f;
+  document.getElementById('fc-def').textContent = c.b;
+  document.getElementById('fc-counter').textContent = 'Card ' + (fcIdx+1) + ' of ' + fcDeck.length;
+  document.getElementById('fc-prev').disabled = fcIdx===0;
+  document.getElementById('fc-next').disabled = fcIdx===fcDeck.length-1;
+}
+
+function flipCard(){
+  fcFlipped = !fcFlipped;
+  document.getElementById('fc-card').classList.toggle('flipped', fcFlipped);
+}
+
+function nextCard(){ if(fcIdx<fcDeck.length-1){ fcIdx++; renderCard(); } }
+function prevCard(){ if(fcIdx>0){ fcIdx--; renderCard(); } }
+
+document.addEventListener('keydown', e=>{
+  if(document.getElementById('flash').classList.contains('hidden')) return;
+  if(e.code==='Space' || e.code==='Enter'){ e.preventDefault(); flipCard(); }
+  else if(e.code==='ArrowRight'){ nextCard(); }
+  else if(e.code==='ArrowLeft'){ prevCard(); }
+});
+
+function renderReview(missed){
+  const box = document.getElementById('review');
+  box.innerHTML = '';
+  if(missed.length===0){ box.innerHTML = '<div class="card"><p>Perfect score — nothing to review! 🎉</p></div>'; return; }
+  const letters=['A','B','C','D'];
+  missed.forEach(({q,given})=>{
+    const div = document.createElement('div');
+    div.className = 'review-q';
+    const dom = document.createElement('div'); dom.className='rq-domain'; dom.textContent = 'Domain ' + q.d + ' — ' + DOMAINS[q.d];
+    const qq = document.createElement('p'); qq.className='q'; qq.textContent = q.q;
+    const ans = document.createElement('div'); ans.className='ans';
+    const yours = document.createElement('div');
+    yours.innerHTML = 'Your answer: <span class="wrong"></span>';
+    yours.querySelector('span').textContent = given===null ? '(unanswered)' : letters[given] + '. ' + q.c[given];
+    const right = document.createElement('div');
+    right.innerHTML = 'Correct answer: <span class="right"></span>';
+    right.querySelector('span').textContent = letters[q.a] + '. ' + q.c[q.a];
+    ans.appendChild(yours); ans.appendChild(right);
+    const ex = document.createElement('div'); ex.className='expl'; ex.textContent = '💡 ' + q.e;
+    div.appendChild(dom); div.appendChild(qq); div.appendChild(ans); div.appendChild(ex);
+    box.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
