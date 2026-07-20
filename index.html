@@ -112,13 +112,13 @@
       <div class="card level-card" onclick="startExam('entry')">
         <span class="badge entry">Level 1 · Entry</span>
         <h2>Foundations Exam</h2>
-        <p>50 multiple-choice questions covering core terminology and concepts from all 8 domains. Build your base before moving up.</p>
+        <p>50 questions drawn at random from a pool of 150 entry-level questions covering all 8 domains — a different exam every attempt.</p>
         <br><button class="btn">Start Level 1 →</button>
       </div>
       <div class="card level-card" onclick="startExam('intermediate')">
         <span class="badge inter">Level 2 · Intermediate</span>
         <h2>Practitioner Exam</h2>
-        <p>100 scenario-based questions with calculations, models, and applied judgment — closer to real CISSP difficulty.</p>
+        <p>100 scenario-based questions drawn at random from a pool of 300 — calculations, models, and applied judgment, different every attempt.</p>
         <br><button class="btn">Start Level 2 →</button>
       </div>
     </div>
@@ -131,8 +131,9 @@
     <div class="card">
       <h2 style="font-size:1.05rem;">How it works</h2>
       <p style="color:var(--muted); font-size:.92rem; margin-top:8px; line-height:1.6;">
-        Answer every question, then submit to see your score, a percentage, pie charts of right vs. wrong answers by domain,
-        and a personalized summary of which CISSP domains you should focus on. Answers are revealed only at the end — just like the real exam.
+        Every attempt draws a fresh random exam from the question pool (450 questions total), and answer positions shuffle too —
+        so you can practice repeatedly without memorizing letters. Submit to see your score, percentage, pie charts of right vs. wrong
+        answers by domain, and a personalized summary of which CISSP domains to focus on. Answers are revealed only at the end — just like the real exam.
       </p>
     </div>
   </div>
@@ -241,12 +242,23 @@ let charts = [];
 
 function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
+const EXAM_SIZE = { entry: 50, intermediate: 100 };
+
+function shuffleChoices(q){
+  const order = shuffle([0,1,2,3]);
+  return { d:q.d, q:q.q, c:order.map(i=>q.c[i]), a:order.indexOf(q.a), e:q.e };
+}
+
 function startExam(level){
   currentLevel = level;
-  questions = shuffle(level==='entry' ? ENTRY_QUESTIONS : INTERMEDIATE_QUESTIONS);
+  const pool = level==='entry' ? ENTRY_QUESTIONS : INTERMEDIATE_QUESTIONS;
+  // Draw a fresh random exam from the pool, then shuffle each question's answer positions
+  questions = shuffle(pool).slice(0, EXAM_SIZE[level]).map(shuffleChoices);
   answers = new Array(questions.length).fill(null);
   idx = 0;
-  document.getElementById('exam-title').textContent = level==='entry' ? 'Level 1 · Foundations (50 questions)' : 'Level 2 · Practitioner (100 questions)';
+  document.getElementById('exam-title').textContent = level==='entry'
+    ? 'Level 1 · Foundations (50 random from pool of ' + ENTRY_QUESTIONS.length + ')'
+    : 'Level 2 · Practitioner (100 random from pool of ' + INTERMEDIATE_QUESTIONS.length + ')';
   show('exam');
   renderQ();
 }

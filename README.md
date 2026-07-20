@@ -4,9 +4,11 @@ Practice exam website for CISSP study, covering all 8 domains.
 
 ## Levels
 
-- **Level 1 — Foundations:** 50 entry-level multiple-choice questions (core terminology and concepts)
-- **Level 2 — Practitioner:** 100 intermediate, scenario-based questions (calculations, models, applied judgment)
+- **Level 1 — Foundations:** 50 questions drawn randomly per attempt from a pool of 150 entry-level questions
+- **Level 2 — Practitioner:** 100 questions drawn randomly per attempt from a pool of 300 intermediate, scenario-based questions
 - **Study Guide:** 200 flashcards (25 per domain) with domain filtering, shuffle, and keyboard navigation
+
+Every exam attempt is unique: questions are randomly drawn from the pool, question order shuffles, and answer (A–D) positions shuffle too.
 
 ## Features
 
