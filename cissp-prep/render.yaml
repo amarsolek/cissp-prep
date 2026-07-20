@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: cissp-prep
-    runtime: static
-    buildCommand: ""
-    staticPublishPath: .
